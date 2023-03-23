@@ -207,6 +207,7 @@ s_no_extra_traits! {
         pub entry_size: u16,
     }
 
+
     pub struct syspage_array_info {
         entry_off: u16,
         entry_size: u16,
@@ -241,6 +242,25 @@ s_no_extra_traits! {
         pub new_cacheattr: syspage_array_info,
         pub new_intrinfo: syspage_array_info,
         pub new_mdriver: syspage_array_info,
+    }
+}
+
+impl ::fmt::Debug for syspage_entry_info {
+    fn fmt(&self, f: &mut ::fmt::Formatter) -> ::fmt::Result {
+        f.debug_struct("syspage_entry_info")
+            .field("entry_off", &self.entry_off)
+            .field("entry_size", &self.entry_size)
+            .finish()
+    }
+}
+
+impl ::fmt::Debug for syspage_array_info {
+    fn fmt(&self, f: &mut ::fmt::Formatter) -> ::fmt::Result {
+        f.debug_struct("syspage_array_info")
+            .field("entry_off", &self.entry_off)
+            .field("entry_size", &self.entry_size)
+            .field("element_size", &self.element_size)
+            .finish()
     }
 }
 

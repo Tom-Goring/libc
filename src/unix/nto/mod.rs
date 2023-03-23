@@ -754,8 +754,19 @@ s_no_extra_traits! {
     }
 }
 
+impl ::fmt::Debug for sockaddr_un {
+    fn fmt(&self, f: &mut ::fmt::Formatter) -> ::fmt::Result {
+        f.debug_struct("sockaddr_un")
+            .field("sun_len", &self.sun_len)
+            .field("sun_family", &self.sun_family)
+            // FIXME: .field("sun_path", &self.sun_path)
+            .finish()
+    }
+}
+
 cfg_if! {
     if #[cfg(feature = "extra_traits")] {
+
         impl PartialEq for sockaddr_un {
             fn eq(&self, other: &sockaddr_un) -> bool {
                 self.sun_len == other.sun_len
@@ -770,15 +781,6 @@ cfg_if! {
 
         impl Eq for sockaddr_un {}
 
-        impl ::fmt::Debug for sockaddr_un {
-            fn fmt(&self, f: &mut ::fmt::Formatter) -> ::fmt::Result {
-                f.debug_struct("sockaddr_un")
-                    .field("sun_len", &self.sun_len)
-                    .field("sun_family", &self.sun_family)
-                    // FIXME: .field("sun_path", &self.sun_path)
-                    .finish()
-            }
-        }
 
         impl ::hash::Hash for sockaddr_un {
             fn hash<H: ::hash::Hasher>(&self, state: &mut H) {
@@ -841,6 +843,28 @@ cfg_if! {
             }
         }
 
+        impl PartialEq for sigset_t {
+            fn eq(&self, other: &sigset_t) -> bool {
+                self.__val == other.__val
+            }
+        }
+
+        impl Eq for sigset_t {}
+
+        impl ::hash::Hash for sigset_t {
+            fn hash<H: ::hash::Hasher>(&self, state: &mut H) {
+                self.__val.hash(state);
+            }
+        }
+
+        impl ::fmt::Debug for sigset_t {
+            fn fmt(&self, f: &mut ::fmt::Formatter) -> ::fmt::Result {
+                f.debug_struct("sigset_t")
+                    .field("__val", &self.__val)
+                    .finish()
+            }
+        }
+
         impl PartialEq for mq_attr {
             fn eq(&self, other: &mq_attr) -> bool {
                 self.mq_maxmsg == other.mq_maxmsg &&
@@ -868,6 +892,7 @@ cfg_if! {
                     .finish()
             }
         }
+
 
         impl PartialEq for sockaddr_storage {
             fn eq(&self, other: &sockaddr_storage) -> bool {
@@ -942,6 +967,31 @@ cfg_if! {
                 self.d_reclen.hash(state);
                 self.d_namelen.hash(state);
                 self.d_name[..self.d_namelen as _].hash(state);
+            }
+        }
+
+        impl PartialEq for sigevent {
+            fn eq(&self, other: &sigevent) -> bool {
+                self.sigev_value == other.sigev_value
+                    && self.sigev_notify == other.sigev_notify
+            }
+        }
+
+        impl Eq for sigevent {}
+
+        impl ::fmt::Debug for sigevent {
+            fn fmt(&self, f: &mut ::fmt::Formatter) -> ::fmt::Result {
+                f.debug_struct("sigevent")
+                    .field("sigev_value", &self.sigev_value)
+                    .field("sigev_notify", &self.sigev_notify)
+                    .finish()
+            }
+        }
+
+        impl ::hash::Hash for sigevent {
+            fn hash<H: ::hash::Hasher>(&self, state: &mut H) {
+                self.sigev_value.hash(state);
+                self.sigev_notify.hash(state);
             }
         }
     }
@@ -2574,6 +2624,25 @@ f! {
         }
     }
 
+    pub fn major(dev: ::dev_t) -> ::c_uint {
+        let x = dev >> 16;
+        x as ::c_uint
+    }
+
+    pub fn minor(dev: ::dev_t) -> ::c_uint {
+        let y = dev & 0xFFFF;
+        y as ::c_uint
+    }
+
+    pub fn makedev(major: ::c_uint, minor: ::c_uint) -> ::dev_t {
+        let major = major as ::dev_t;
+        let minor = minor as ::dev_t;
+        let mut dev = 0;
+        dev |= major << 16;
+        dev |= minor;
+        dev
+    }
+
     pub fn _DEXTRA_FIRST(_d: *const dirent) -> *mut ::dirent_extra {
         let _f = &((*(_d)).d_name) as *const _;
         let _s = _d as usize;
@@ -2745,6 +2814,7 @@ extern "C" {
 
     pub fn getpeereid(socket: ::c_int, euid: *mut ::uid_t, egid: *mut ::gid_t) -> ::c_int;
 
+    pub fn __errno_location() -> *mut ::c_int;
     pub fn strerror_r(errnum: ::c_int, buf: *mut c_char, buflen: ::size_t) -> ::c_int;
 
     pub fn abs(i: ::c_int) -> ::c_int;
